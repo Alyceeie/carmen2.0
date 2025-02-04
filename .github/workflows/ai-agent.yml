@@ -1,6 +1,7 @@
 name: AI Agent Workflow
 
 on:
+  workflow_dispatch:  # Allow manual triggers
   issues:
     types: [opened, edited, labeled]
   pull_request:
