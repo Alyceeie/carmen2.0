@@ -26,26 +26,21 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             try {
-              const context = github.context;
               console.log('Event name:', context.eventName);
               console.log('Event payload:', JSON.stringify(context.payload, null, 2));
               
-              let body = '';
-              
               if (context.eventName === 'issues' && context.payload.action === 'opened') {
-                console.log('Processing new issue:', context.payload.issue.title);
+                const issueTitle = context.payload.issue.title;
+                console.log('Processing new issue:', issueTitle);
                 
-                body = `Thanks for opening this issue! I'm Carmen 2.0, your AI assistant. I'll analyze your request and help you out.
+                const body = `Hey fam! Carmen 2.0 here! 🚀
 
-                I see you're asking about: ${context.payload.issue.title}
+                Thanks for opening this issue about: "${issueTitle}"
                 
-                Let me look into this for you...`;
-                
-                console.log('Creating comment with body:', body);
+                I'm analyzing your request and will help you out! Stay tuned for updates... 💫`;
                 
                 await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
+                  ...context.repo,
                   issue_number: context.payload.issue.number,
                   body: body
                 });
@@ -56,13 +51,10 @@ jobs:
               if (context.eventName === 'pull_request' && context.payload.action === 'opened') {
                 console.log('Processing new pull request:', context.payload.pull_request.title);
                 
-                body = `Thanks for the pull request! I'll review your changes and provide feedback shortly.`;
-                
-                console.log('Creating PR comment with body:', body);
+                const body = `Yo! Thanks for the PR! I'll check out your changes and drop some feedback real quick! 🔍`;
                 
                 await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
+                  ...context.repo,
                   issue_number: context.payload.pull_request.number,
                   body: body
                 });
