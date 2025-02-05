@@ -1,7 +1,7 @@
 name: AI Agent Workflow
 
 on:
-  workflow_dispatch:  # Allow manual triggers
+  workflow_dispatch:
   issues:
     types: [opened, edited, labeled]
   pull_request:
@@ -25,31 +25,51 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const context = github.context;
-            let body = '';
-            
-            if (context.eventName === 'issues') {
-              body = `Thanks for opening this issue! I'm Carmen 2.0, your AI assistant. I'll analyze your request and help you out.
+            try {
+              const context = github.context;
+              console.log('Event name:', context.eventName);
+              console.log('Event payload:', JSON.stringify(context.payload, null, 2));
+              
+              let body = '';
+              
+              if (context.eventName === 'issues' && context.payload.action === 'opened') {
+                console.log('Processing new issue:', context.payload.issue.title);
+                
+                body = `Thanks for opening this issue! I'm Carmen 2.0, your AI assistant. I'll analyze your request and help you out.
 
-              I see you're asking about: ${context.payload.issue.title}
+                I see you're asking about: ${context.payload.issue.title}
+                
+                Let me look into this for you...`;
+                
+                console.log('Creating comment with body:', body);
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.issue.number,
+                  body: body
+                });
+                
+                console.log('Comment created successfully');
+              }
               
-              Let me look into this for you...`;
-              
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                body: body
-              });
-            }
-            
-            if (context.eventName === 'pull_request') {
-              body = `Thanks for the pull request! I'll review your changes and provide feedback shortly.`;
-              
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body: body
-              });
+              if (context.eventName === 'pull_request' && context.payload.action === 'opened') {
+                console.log('Processing new pull request:', context.payload.pull_request.title);
+                
+                body = `Thanks for the pull request! I'll review your changes and provide feedback shortly.`;
+                
+                console.log('Creating PR comment with body:', body);
+                
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.payload.pull_request.number,
+                  body: body
+                });
+                
+                console.log('PR comment created successfully');
+              }
+            } catch (error) {
+              console.error('Error in AI Agent workflow:', error);
+              throw error;
             }
